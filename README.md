@@ -5,6 +5,8 @@ Using the Twitch API to know if a list of users are streaming.
 
 Displaying the streaming users in a desktop app with Processing.
 
+Lighting small Leds on a panel, using an Arduino.
+
 ## Documentation
 
 #### Processing
@@ -101,7 +103,9 @@ It has a cost, and this data is not a matter of life and death, so we can set th
 You can change it to anything, but that has to stay greater than 2 seconds.
 The clockTick() method trigger the request according to the value you choose.
 
+
 Then for every streamer, we display a red/green dot and the mention "is not streaming" or "is streaming".
+Every tick, we also update the leds that should be on or off on your card with the updateLeds function.
 
 ###### Events
 
@@ -110,6 +114,10 @@ This data is used in the draw() to create a white rectangle around the correspon
 If your mouse is above a user, it will also display its thumbnail or offline picture and its 
 profile picture.
 
+
 On the mousePressed event, if the mouse is above an element of the streamers list, we use the selectorY value to get the corresponding streamer
 in our data list. And then we use the link() function to open its Twitch channel in your browser.
+
+The serialEvent is used to trigger functions when you receive data from the serial port, meaning from your Arduino.
+We just use the number of the pressed button on the card as we used the selectorY value in the mousePressed event.
 

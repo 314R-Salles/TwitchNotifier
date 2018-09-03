@@ -1,5 +1,10 @@
 import http.requests.GetRequest;
 import java.util.List;
+import processing.serial.*; 
+
+
+Serial myPort;
+byte[] leds = new byte[5];
 
 // All the objects declared on top of the program are global, and thus can be accessible in the entire program.
 
@@ -35,12 +40,19 @@ PImage notFound;
 
 // Setup method. Run once when the program starts.
 void setup() {
+
+
+  // Start the connection with your arduino.
+  String portName = Serial.list()[0];
+  myPort = new Serial(this, portName, 9600);
+
+
   startTime = millis();
   size(500, 500);
   background(255);
 
   usernames = loadStrings("usernames.txt");
-  
+
   if (usernames == null) {
     println("Property file is missing");
     exit();
@@ -51,7 +63,7 @@ void setup() {
     get.addHeader("Client-ID", TWITCH_TOKEN);
     get.send();
 
-    JSONArray jsonData  = parseJSONObject(get.getContent()).getJSONArray("data");
+    JSONArray jsonData = parseJSONObject(get.getContent()).getJSONArray("data");
 
     // loop on the size of the response instead of users.length in case some users were not found
     for (int index=0; index<jsonData.size(); index++) {
@@ -115,6 +127,8 @@ void draw() {
     catch(Exception e) {
       println("Failed to get stream data for your streamers");
     }
+
+    updateLeds();
   }
 
   // Streaming status display, with red/green lights.
@@ -122,11 +136,13 @@ void draw() {
     strokeWeight(2); 
 
     if (streamerData.get(index).isStreaming) {
+      leds[index] = 1;
       fill(255); 
       text( streamerData.get(index).displayName + " is streaming", 10, 50*index+30); 
       fill(0, 255, 0); 
       ellipse(175, 50*index+27, 10, 10);
     } else { 
+      leds[index] = 0;
       fill(255); 
       text( streamerData.get(index).displayName + " is offline", 10, 50*index+30); 
       fill(255, 0, 0); 
@@ -164,6 +180,12 @@ void mousePressed() {
   if (isMouseCursorOnStreamerName) link(TWITCH_BASE_URL + streamerData.get(selectorY).username);
 }
 
+void serialEvent(Serial myPort) {
+  int readValue = myPort.read();
+  link(TWITCH_BASE_URL + streamerData.get(readValue).username);
+}
+
+
 // Produces a 'tick' every WAIT_TIME milliseconds
 boolean clockTick() {
   return millis() - startTime > WAIT_TIME;
@@ -176,4 +198,9 @@ String getUrlWithQueryParams(String url, String field) {
     url += field + "=" + user + "&";
   }
   return url;
+}
+
+
+void updateLeds() {
+  myPort.write(leds);
 }
